@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的聊天與天氣網頁</title>
+    <!-- 這裡用 style 標籤直接寫入 CSS 樣式，讓網頁看起來更漂亮 -->
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        #auth-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        #auth-container h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 300px;
+        }
+
+        .auth-form input {
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .auth-form .button-group {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .auth-form button {
+            flex: 1;
+            padding: 12px 24px;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        #login-button {
+            background-color: #007BFF;
+        }
+
+        #login-button:hover {
+            background-color: #0056b3;
+        }
+
+        #register-button-action {
+            background-color: #28a745;
+        }
+
+        #register-button-action:hover {
+            background-color: #218838;
+        }
+        
+        #google-login-button, #goto-register-button, #goto-login-button {
+            background-color: #DB4437; /* Google 紅色 */
+            width: 100%;
+        }
+
+        #google-login-button:hover, #goto-register-button:hover, #goto-login-button:hover {
+            background-color: #b83325;
+        }
+        
+        #login-message, #register-message {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        #register-screen {
+            display: none;
+        }
+
+        .container {
+            display: none; /* 預設隱藏，登入後才顯示 */
+            flex: 1;
+            width: 90%;
+            max-width: 1200px;
+            height: 90vh;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            flex-direction: column; /* 讓內部元素垂直排列 */
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            background-color: #f8f9fa;
+        }
+        
+        .top-bar-content {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .top-bar h2 {
+            margin: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        
+        #user-status {
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        #logout-button {
+            padding: 8px 16px;
+            background-color: #dc3545; /* 紅色 */
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        
+        #logout-button:hover {
+            background-color: #c82333;
+        }
+
+        .content-container {
+            display: flex;
+            flex: 1;
+        }
+
+        .chat-section, .weather-section {
+            flex: 1;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-section {
+            border-right: 1px solid #e0e0e0;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        #message-container {
+            flex-grow: 1;
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+        }
+
+        .input-container {
+            display: flex;
+        }
+
+        #message-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            margin-right: 10px;
+            font-size: 16px;
+        }
+
+        #send-button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        #send-button:hover {
+            background-color: #0056b3;
+        }
+
+        #weather-info {
+            flex-grow: 1;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        #weather-info h3 {
+            text-align: center;
+            color: #0056b3;
+            margin-top: 0;
+        }
+
+        #weather-info p {
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: #555;
+        }
+        
+        .message-row {
+            margin-bottom: 8px;
+        }
+
+        .my-message {
+            text-align: right;
+        }
+
+        .my-message .message-text {
+            display: inline-block;
+            background-color: #007BFF;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 12px;
+        }
+
+        .other-message {
+            text-align: left;
+        }
+
+        .other-message .message-text {
+            display: inline-block;
+            background-color: #e0e0e0;
+            color: #333;
+            padding: 8px 12px;
+            border-radius: 12px;
+        }
+        
+        .message-nickname {
+            font-size: 0.8em;
+            color: #888;
+            margin-bottom: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .content-container {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .chat-section, .weather-section {
+                height: 50vh;
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 認證容器，包含登入和註冊畫面 -->
+    <div id="auth-container">
+        <!-- 登入畫面 -->
+        <div id="login-screen">
+            <h1>歡迎回來</h1>
+            <form id="login-form" class="auth-form">
+                <input type="email" id="email-input" placeholder="電子郵件" required>
+                <input type="password" id="password-input" placeholder="密碼" required>
+                <button type="button" id="login-button">登入</button>
+                <button type="button" id="goto-register-button">建立新帳號</button>
+                <p id="login-message"></p>
+            </form>
+        </div>
+
+        <!-- 註冊畫面 (預設隱藏) -->
+        <div id="register-screen">
+            <h1>建立新帳號</h1>
+            <form id="register-form" class="auth-form">
+                <input type="email" id="register-email-input" placeholder="電子郵件" required>
+                <input type="password" id="register-password-input" placeholder="密碼" required>
+                <input type="text" id="nickname-input" placeholder="暱稱" required>
+                <button type="button" id="register-button-action">註冊</button>
+                <button type="button" id="goto-login-button">已有帳號？返回登入</button>
+                <p id="register-message"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- 主程式容器，預設隱藏 -->
+    <div class="container" id="main-app">
+        <!-- 新增頂部欄位，包含聊天標題、登入狀態和登出按鈕 -->
+        <div class="top-bar">
+            <div class="top-bar-content">
+                <h2 id="chat-title">聊天室</h2>
+                <p id="user-status" style="color: #888; margin-top: 5px;">狀態: 未登入</p>
+            </div>
+            <button id="logout-button">登出</button>
+        </div>
+        <div class="content-container">
+            <!-- 左邊的聊天區塊 -->
+            <div class="chat-section">
+                <div id="message-container">
+                    <!-- 訊息會在這裡顯示 -->
+                    <p style="text-align: center; color: #888;">載入聊天記錄...</p>
+                </div>
+                <div class="input-container">
+                    <input type="text" id="message-input" placeholder="輸入訊息...">
+                    <button id="send-button">送出</button>
+                </div>
+            </div>
+
+            <!-- 右邊的天氣區塊 -->
+            <div class="weather-section">
+                <h2>臺南市天氣</h2>
+                <div id="weather-info">
+                    <!-- 天氣資料會在這裡顯示 -->
+                    <p style="text-align: center;">載入中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 將所有 JavaScript 程式碼都放在這個模組中 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        // 匯入所需的 Firebase 認證和 Firestore 函式
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendEmailVerification } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, onSnapshot, collection, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // =========================================================================
+        // 你提供的 Firebase 設定
+        // =========================================================================
+        const firebaseConfig = {
+          apiKey: "AIzaSyDX_gb9nhYWHXZ2wYbFXKBoIt2LIHqmegc",
+          authDomain: "project-4752601545840018132.firebaseapp.com",
+          projectId: "project-4752601545840018132",
+          storageBucket: "project-4752601545840018132.firebasestorage.app",
+          messagingSenderId: "1041541669850",
+          appId: "1:1041541669850:web:9eb9c7ee583a7debd7d6e3",
+          measurementId: "G-ZL1N783DQR"
+        };
+        const appId = firebaseConfig.appId;
+        // =========================================================================
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let userId;
+        let userNickname = ''; // 新增變數來儲存使用者暱稱
+        
+        const mainApp = document.getElementById('main-app');
+        const authContainer = document.getElementById('auth-container');
+        const loginScreen = document.getElementById('login-screen');
+        const registerScreen = document.getElementById('register-screen');
+        
+        // 登入相關 DOM 元素
+        const loginMessage = document.getElementById('login-message');
+        const emailInput = document.getElementById('email-input');
+        const passwordInput = document.getElementById('password-input');
+        const loginButton = document.getElementById('login-button');
+        
+        // 註冊相關 DOM 元素
+        const registerMessage = document.getElementById('register-message');
+        const registerEmailInput = document.getElementById('register-email-input');
+        const registerPasswordInput = document.getElementById('register-password-input');
+        const nicknameInput = document.getElementById('nickname-input');
+        const registerButtonAction = document.getElementById('register-button-action');
+
+        // 切換畫面按鈕
+        const gotoRegisterButton = document.getElementById('goto-register-button');
+        const gotoLoginButton = document.getElementById('goto-login-button');
+
+        // 其他按鈕
+        const logoutButton = document.getElementById('logout-button');
+        const sendButton = document.getElementById('send-button');
+        const messageInput = document.getElementById('message-input');
+        const messageContainer = document.getElementById('message-container');
+        const weatherInfo = document.getElementById('weather-info');
+        const chatTitle = document.getElementById('chat-title');
+        const userStatus = document.getElementById('user-status');
+
+        // 當網頁載入完成時，執行這個函式
+        window.addEventListener('DOMContentLoaded', () => {
+            // 設定事件監聽
+            loginButton.addEventListener('click', handleLogin);
+            registerButtonAction.addEventListener('click', handleRegister);
+            logoutButton.addEventListener('click', handleLogout);
+
+            // 切換畫面
+            gotoRegisterButton.addEventListener('click', () => {
+                loginScreen.style.display = 'none';
+                registerScreen.style.display = 'block';
+                loginMessage.textContent = ''; // 清除訊息
+            });
+            gotoLoginButton.addEventListener('click', () => {
+                loginScreen.style.display = 'block';
+                registerScreen.style.display = 'none';
+                registerMessage.textContent = ''; // 清除訊息
+            });
+            
+            sendButton.addEventListener('click', sendMessage);
+            messageInput.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        });
+
+        // 函式：處理登出
+        async function handleLogout() {
+            try {
+                await signOut(auth);
+                loginMessage.textContent = "已成功登出。";
+            } catch (error) {
+                console.error("登出失敗:", error);
+            }
+        }
+
+        // 函式：處理登入
+        async function handleLogin() {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            if (!email || !password) {
+                loginMessage.style.color = 'red';
+                loginMessage.textContent = "電子郵件與密碼不能為空。";
+                return;
+            }
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                loginMessage.style.color = 'green';
+                loginMessage.textContent = "登入成功！";
+            } catch (error) {
+                loginMessage.style.color = 'red';
+                loginMessage.textContent = getErrorMessage(error.code);
+                console.error("登入失敗:", error.code);
+            }
+        }
+
+        // 函式：處理註冊 (新增了暱稱功能)
+        async function handleRegister() {
+            const email = registerEmailInput.value;
+            const password = registerPasswordInput.value;
+            const nickname = nicknameInput.value;
+
+            if (!email || !password || !nickname) {
+                registerMessage.style.color = 'red';
+                registerMessage.textContent = "所有欄位都不能為空。";
+                return;
+            }
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // 將暱稱儲存到 Firestore 的 users collection
+                const userDocRef = doc(db, `artifacts/${appId}/public/data/users`, user.uid);
+                await setDoc(userDocRef, { nickname: nickname });
+
+                await sendEmailVerification(user);
+                
+                registerMessage.style.color = 'green';
+                registerMessage.textContent = "註冊成功！請檢查您的電子郵件並點擊驗證連結，然後返回登入。";
+                console.log("驗證信已發送至:", user.email);
+            } catch (error) {
+                registerMessage.style.color = 'red';
+                registerMessage.textContent = getErrorMessage(error.code);
+                console.error("註冊失敗:", error.code);
+            }
+        }
+
+        // 函式：將 Firebase 的錯誤代碼轉換成易懂的訊息
+        function getErrorMessage(errorCode) {
+            switch (errorCode) {
+                case 'auth/invalid-email':
+                    return '電子郵件格式不正確。';
+                case 'auth/user-disabled':
+                    return '此帳號已被停用。';
+                case 'auth/user-not-found':
+                    return '找不到此電子郵件的帳號。';
+                case 'auth/wrong-password':
+                    return '密碼錯誤。';
+                case 'auth/email-already-in-use':
+                    return '此電子郵件已被註冊。';
+                case 'auth/weak-password':
+                    return '密碼強度不足，至少需要 6 個字元。';
+                case 'auth/invalid-credential':
+                    return '登入資訊無效，請檢查電子郵件和密碼是否正確。';
+                default:
+                    return '登入/註冊發生未知錯誤。';
+            }
+        }
+
+        // 監聽使用者登入狀態的變化
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // 檢查電子郵件是否已驗證
+                if (user.emailVerified) {
+                    // 使用者已登入且電子郵件已驗證
+                    userId = user.uid;
+                    // 從 Firestore 取得使用者的暱稱
+                    const userDocRef = doc(db, `artifacts/${appId}/public/data/users`, userId);
+                    const docSnap = await getDoc(userDocRef);
+                    if (docSnap.exists()) {
+                        userNickname = docSnap.data().nickname;
+                    } else {
+                        // 如果沒有暱稱，用電子郵件取代
+                        userNickname = user.email || '使用者';
+                    }
+
+                    // 這裡修改了，只顯示暱稱，不顯示 ID
+                    chatTitle.textContent = `聊天室 (帳號: ${userNickname})`;
+                    userStatus.textContent = '狀態: 已登入';
+                    userStatus.style.color = 'green';
+                    authContainer.style.display = 'none';
+                    mainApp.style.display = 'flex';
+                    fetchWeather();
+                    setupChatListener();
+                } else {
+                    // 使用者已登入但電子郵件尚未驗證
+                    authContainer.style.display = 'flex';
+                    mainApp.style.display = 'none';
+                    loginScreen.style.display = 'block';
+                    registerScreen.style.display = 'none';
+                    loginMessage.style.color = 'orange';
+                    loginMessage.textContent = "您的電子郵件尚未驗證。請檢查您的信箱，並點擊驗證連結。";
+                }
+            } else {
+                // 使用者未登入
+                userId = null;
+                userNickname = '';
+                authContainer.style.display = 'flex';
+                mainApp.style.display = 'none';
+                loginScreen.style.display = 'block';
+                registerScreen.style.display = 'none';
+                chatTitle.textContent = `聊天室`;
+                userStatus.textContent = '狀態: 未登入';
+                userStatus.style.color = '#888';
+            }
+        });
+
+        // 函式：處理聊天訊息的發送與顯示
+        async function sendMessage() {
+            const message = messageInput.value.trim(); // 取得輸入框內容並移除前後空白
+
+            if (message !== '' && userId) { // 確保訊息不為空且使用者已登入
+                try {
+                    // 使用 addDoc 將訊息儲存到 Firestore
+                    const chatCollectionRef = collection(db, `artifacts/${appId}/public/data/messages`);
+                    await addDoc(chatCollectionRef, {
+                        userId: userId,
+                        nickname: userNickname, // 儲存暱稱
+                        text: message,
+                        timestamp: Date.now()
+                    });
+                    
+                    messageInput.value = ''; // 清空輸入框
+                } catch (error) {
+                    console.error("寫入聊天訊息時發生錯誤:", error);
+                }
+            }
+        }
+
+        // 函式：設定 Firestore 即時監聽器
+        function setupChatListener() {
+            const chatCollectionRef = collection(db, `artifacts/${appId}/public/data/messages`);
+            const chatQuery = query(chatCollectionRef);
+            
+            // 使用 onSnapshot 監聽資料庫的即時變化
+            onSnapshot(chatQuery, (snapshot) => {
+                messageContainer.innerHTML = ''; // 清空舊的訊息
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    displayMessage(data.userId, data.nickname, data.text); // 傳入暱稱
+                });
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+            });
+        }
+        
+        // 函式：將訊息顯示在網頁上 (使用暱稱)
+        function displayMessage(senderId, senderNickname, messageText) {
+            const messageRow = document.createElement('div');
+            messageRow.classList.add('message-row');
+            
+            const messageTextElement = document.createElement('span');
+            messageTextElement.classList.add('message-text');
+            messageTextElement.textContent = messageText;
+
+            const messageNicknameElement = document.createElement('div');
+            messageNicknameElement.classList.add('message-nickname');
+            messageNicknameElement.textContent = `來自 ${senderNickname || '使用者'}`; // 如果沒有暱稱，顯示「使用者」
+            
+            if (senderId === userId) {
+                messageRow.classList.add('my-message');
+            } else {
+                messageRow.classList.add('other-message');
+            }
+            
+            messageRow.appendChild(messageNicknameElement);
+            messageRow.appendChild(messageTextElement);
+            messageContainer.appendChild(messageRow);
+        }
+
+        // 函式：從中央氣象署 API 取得天氣資料
+        async function fetchWeather() {
+            try {
+                // API 網址，用於取得臺南市未來 36 小時天氣預報 (F-C0032-001)
+                const apiKey = 'CWA-1F9FD71C-D858-4545-855C-61AE0FF69473'; // 你的 API key
+                const locationName = '臺南市'; // 設定為臺南市
+                const url = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=${apiKey}&locationName=${locationName}`;
+                
+                // 使用 fetch 函式發送非同步網路請求
+                const response = await fetch(url);
+                
+                // 檢查回應是否成功
+                if (!response.ok) {
+                    throw new Error(`HTTP 錯誤! 狀態碼: ${response.status}`);
+                }
+
+                // 將回應轉換為 JSON 格式
+                const data = await response.json();
+
+                // 檢查 API 是否成功回傳資料
+                if (data.success !== 'true') {
+                    weatherInfo.innerHTML = `<p>獲取天氣資料失敗：${data.message}</p>`;
+                    return;
+                }
+
+                // 從複雜的 JSON 資料中，解析出我們需要的資訊
+                const locationData = data.records.location[0];
+                const weatherElements = locationData.weatherElement;
+
+                // 提取天氣狀況、氣溫和降雨機率
+                const weatherDescription = weatherElements.find(e => e.elementName === 'Wx').time[0].parameter.parameterName;
+                const temperature = weatherElements.find(e => e.elementName === 'MaxT').time[0].parameter.parameterName; // 最高溫
+                const rainProbability = weatherElements.find(e => e.elementName === 'PoP').time[0].parameter.parameterName; // 降雨機率
+                const startTime = weatherElements[0].time[0].startTime;
+
+                // 將整理好的天氣資料顯示在網頁上
+                weatherInfo.innerHTML = `
+                    <h3>${locationName}</h3>
+                    <p><strong>天氣狀況：</strong> ${weatherDescription}</p>
+                    <p><strong>最高氣溫：</strong> ${temperature}°C</p>
+                    <p><strong>降雨機率：</strong> ${rainProbability}%</p>
+                    <p><small>資料時間：${new Date(startTime).toLocaleString('zh-TW')}</small></p>
+                `;
+
+            } catch (error) {
+                // 如果發生錯誤，在網頁上顯示錯誤訊息
+                weatherInfo.innerHTML = `<p>無法連接到天氣伺服器，請檢查網路或 API key。</p>`;
+                console.error('獲取天氣資料時發生錯誤：', error);
+            }
+        }
+    </script>
+</body>
+</html>
