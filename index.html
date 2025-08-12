@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的聊天與天氣網頁 (暗色系)</title>
+    <!-- 匯入 Font Awesome 圖示庫，用於顯示眼睛圖示等 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* CSS Reset & 基本設定：確保在所有瀏覽器上外觀一致 */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        /* 根變數：方便統一管理顏色，改為暗色系主題 */
+        :root {
+            --primary-color: #79B3FF; /* 淺藍色 */
+            --secondary-color: #8CFFDF; /* 淺青綠色 */
+            --danger-color: #FF7B84; /* 淺紅色 */
+            --warning-color: #FFE16E; /* 淺黃色 */
+            --background-color: #1a202c; /* 深灰色背景 */
+            --card-background: #2d3748; /* 更深的卡片背景 */
+            --border-color: #4a5568; /* 深灰色邊框 */
+            --text-color: #f7fafc; /* 淺色文字 */
+            --subtle-text-color: #a0aec0; /* 較淺的文字 */
+        }
+
+        /* ------------------------------------- */
+        /* 修正 Body 的佈局，讓認證容器在頁面中央 */
+        /* ------------------------------------- */
+        body, html {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh; /* 修正：將 height 改為 min-height，避免內容溢出 */
+            background-color: var(--background-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center; 
+            overflow: auto; 
+        }
+
+        /* 認證容器：包含登入和註冊畫面，美化與居中 */
+        #auth-container {
+            width: 90%;
+            max-width: 400px;
+            background-color: var(--card-background);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); /* 更深的陰影 */
+            text-align: center;
+            animation: fadeIn 0.5s ease-in-out;
+            /* 修正：移除 margin: auto，讓 flex 佈局處理置中 */
+        }
+        
+        #auth-container h1 {
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            font-size: 2.5rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+            font-weight: 300;
+        }
+        
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem; 
+        }
+        
+        /* 通用輸入框樣式 */
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: #4a5568; /* 暗色系輸入框背景 */
+            overflow: hidden;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .input-wrapper:focus-within {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(121, 179, 255, 0.5);
+        }
+        
+        .input-wrapper input {
+            flex-grow: 1;
+            border: none;
+            padding: 14px;
+            outline: none;
+            font-size: 1rem;
+            background-color: transparent;
+            color: var(--text-color); /* 輸入框文字顏色 */
+        }
+        
+        .show-password-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--subtle-text-color);
+            font-size: 1.1rem;
+            padding: 5px 15px;
+            transition: color 0.3s ease;
+            flex-shrink: 0;
+        }
+        
+        .show-password-button:hover {
+            color: var(--text-color);
+        }
+
+        .auth-form button {
+            padding: 15px 24px; 
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .auth-form button:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3); }
+        .auth-form button:active { transform: translateY(0); box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); }
+        
+        #login-button { background-color: var(--primary-color); }
+        #login-button:hover { background-color: #559ADF; }
+        #register-button-action { background-color: var(--secondary-color); }
+        #register-button-action:hover { background-color: #6CE5B9; }
+        
+        #goto-register-button, #goto-login-button {
+            background-color: #4a5568;
+            color: var(--text-color);
+            box-shadow: none;
+            font-size: 1rem;
+        }
+        #goto-register-button:hover, #goto-login-button:hover {
+            background-color: #636b77;
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        #login-message {
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: center;
+        }
+        #resend-verification-button {
+            background-color: var(--warning-color);
+            color: var(--text-color);
+            padding: 8px 16px;
+            margin-top: 10px;
+        }
+        #resend-verification-button:hover {
+            background-color: #D2C416;
+        }
+
+        #forgot-password-link {
+            font-size: 0.9rem;
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            margin-top: -15px;
+            display: block;
+        }
+        #forgot-password-link:hover {
+            text-decoration: underline;
+            color: #559ADF;
+        }
+
+        /* ------------------------------------- */
+        /* 主應用程式容器 */
+        /* ------------------------------------- */
+        .container {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            max-width: 1000px;
+            max-height: 90vh; 
+            background-color: var(--card-background);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        /* 頂部欄位 (Header)：固定在上方 */
+        .top-bar {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: #2d3748;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+        .top-bar-content {
+            flex-grow: 1;
+            text-align: left;
+        }
+        .top-bar h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        #user-status {
+            font-size: 0.9rem;
+            margin: 0;
+            color: var(--subtle-text-color);
+        }
+        #top-bar-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        #change-password-button, #logout-button {
+            padding: 8px 16px;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        #change-password-button { background-color: var(--warning-color); color: var(--text-color); }
+        #change-password-button:hover { background-color: #D2C416; }
+        #logout-button { background-color: var(--danger-color); }
+        #logout-button:hover { background-color: #CC4A52; }
+        
+        /* 聊天與天氣主區塊：使用 Flexbox 或 Grid 實現左右佈局 */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+            overflow: hidden;
+        }
+        
+        /* 聊天區塊：佔據中間大部分空間，可滾動 */
+        .chat-section {
+            flex: 3;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        /* 訊息容器：可滾動的聊天區域 */
+        #message-container {
+            flex-grow: 1;
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            overflow-y: auto;
+            background-color: #252d3a; /* 暗色系聊天背景 */
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .input-container {
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        #message-input {
+            flex-grow: 1;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            background-color: #4a5568;
+            color: var(--text-color);
+        }
+        #message-input:focus {
+            border-color: var(--primary-color);
+        }
+        #send-button {
+            padding: 12px 20px;
+            background-color: var(--primary-color);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        #send-button:hover { background-color: #559ADF; }
+        
+        /* 天氣區塊：在大螢幕上會與聊天室並排 */
+        .weather-section {
+            flex: 1;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            background-color: #252d3a; /* 暗色系天氣背景 */
+            border-radius: 8px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        
+        #weather-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #weather-info h3 {
+            color: var(--primary-color);
+            margin: 0 0 5px 0;
+            font-size: 1.2rem;
+        }
+        #weather-info p {
+            font-size: 1rem;
+            line-height: 1.6;
+            margin: 0;
+            color: var(--text-color);
+        }
+        
+        .message-row { margin-bottom: 8px; }
+        .my-message { text-align: right; }
+        .my-message .message-text {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 12px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .other-message { text-align: left; }
+        .other-message .message-text {
+            display: inline-block;
+            background-color: #4a5568; /* 暗色系其他使用者訊息背景 */
+            color: var(--text-color);
+            padding: 8px 12px;
+            border-radius: 12px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .message-nickname {
+            font-size: 0.8rem;
+            color: var(--subtle-text-color);
+            margin-bottom: 4px;
+        }
+
+        /* ------------------------------------- */
+        /* 彈出視窗 (Modal) 的樣式 */
+        /* ------------------------------------- */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* 更暗的半透明背景 */
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .modal-content {
+            background-color: #2d3748; /* 暗色系視窗背景 */
+            color: var(--text-color);
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+        .modal-content h3 { margin-top: 0; }
+        .modal-content input {
+            width: calc(100% - 24px);
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: #4a5568;
+            color: var(--text-color);
+        }
+        .modal-content button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #fff;
+        }
+        .modal-content button.confirm-button { background-color: var(--primary-color); }
+        .modal-content button.confirm-button:hover { background-color: #559ADF; }
+        .modal-content button.cancel-button { background-color: var(--danger-color); }
+        .modal-content button.cancel-button:hover { background-color: #CC4A52; }
+        .modal-message {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        /* ------------------------------------- */
+        /* 平板和桌機樣式 (螢幕寬度大於 768px 時) */
+        /* ------------------------------------- */
+        @media (min-width: 768px) {
+            .container {
+                border-radius: 12px;
+            }
+            .top-bar, .main-content {
+                padding: 20px 30px;
+            }
+        }
+        
+        /* 手機樣式 (螢幕寬度小於 768px 時) */
+        @media (max-width: 767px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                max-height: calc(100vh - 20px);
+            }
+            .main-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .chat-section, .weather-section {
+                flex: none;
+                width: 100%;
+            }
+            .weather-section {
+                order: 2;
+            }
+            .chat-section {
+                order: 1;
+            }
+        }
+        
+        /* 動畫 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 認證容器，包含登入和註冊畫面 -->
+    <div id="auth-container">
+        <!-- 登入畫面 -->
+        <div id="login-screen">
+            <h1>歡迎回來</h1>
+            <form id="login-form" class="auth-form">
+                <div class="input-wrapper">
+                    <input type="email" id="email-input" placeholder="電子郵件" required autocomplete="email">
+                </div>
+                <div class="input-wrapper">
+                    <input type="password" id="password-input" placeholder="密碼" required autocomplete="current-password">
+                    <button type="button" class="show-password-button" id="toggle-login-password">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+                <button type="button" id="login-button">登入</button>
+                <button type="button" id="goto-register-button">建立新帳號</button>
+                <div id="login-message"></div>
+                <a href="#" id="forgot-password-link">忘記密碼？</a>
+            </form>
+        </div>
+
+        <!-- 註冊畫面 (預設隱藏) -->
+        <div id="register-screen">
+            <h1>建立新帳號</h1>
+            <form id="register-form" class="auth-form">
+                <div class="input-wrapper">
+                    <input type="email" id="register-email-input" placeholder="電子郵件" required autocomplete="email">
+                </div>
+                <div class="input-wrapper">
+                    <input type="password" id="register-password-input" placeholder="密碼" required autocomplete="new-password">
+                    <button type="button" class="show-password-button" id="toggle-register-password">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+                <div class="input-wrapper">
+                    <input type="text" id="nickname-input" placeholder="暱稱" required>
+                </div>
+                <button type="button" id="register-button-action">註冊</button>
+                <button type="button" id="goto-login-button">已有帳號？返回登入</button>
+                <p id="register-message"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- 主程式容器，預設隱藏 -->
+    <div class="container" id="main-app">
+        <div class="top-bar">
+            <div class="top-bar-content">
+                <h2 id="chat-title">聊天室</h2>
+                <p id="user-status">狀態: 未登入</p>
+            </div>
+            <div id="top-bar-buttons">
+                <button id="change-password-button">修改密碼</button>
+                <button id="logout-button">登出</button>
+            </div>
+        </div>
+
+        <!-- 全新的左右分割主內容區 -->
+        <div class="main-content">
+            <div class="chat-section">
+                <div id="message-container">
+                    <p style="text-align: center; color: var(--subtle-text-color);">載入聊天記錄...</p>
+                </div>
+                <div class="input-container">
+                    <input type="text" id="message-input" placeholder="輸入訊息..." disabled>
+                    <button id="send-button" disabled>送出</button>
+                </div>
+            </div>
+
+            <div class="weather-section">
+                <div id="weather-info">
+                    <p style="text-align: center;">載入中...</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ------------------------------------- -->
+    <!-- 密碼重設彈出視窗 (Modal) -->
+    <!-- ------------------------------------- -->
+    <div id="forgot-password-modal" class="modal">
+        <div class="modal-content">
+            <h3>重設密碼</h3>
+            <p>請輸入您的電子郵件，我們將發送密碼重設連結給您。</p>
+            <input type="email" id="forgot-password-email-input" placeholder="電子郵件" required>
+            <p id="forgot-password-message" class="modal-message"></p>
+            <button class="confirm-button" id="send-reset-email-button">送出</button>
+            <button class="cancel-button" id="close-forgot-password-modal">取消</button>
+        </div>
+    </div>
+
+    <!-- ------------------------------------- -->
+    <!-- 修改密碼彈出視窗 (Modal) -->
+    <!-- ------------------------------------- -->
+    <div id="change-password-modal" class="modal">
+        <div class="modal-content">
+            <h3>修改密碼</h3>
+            <input type="password" id="current-password-input" placeholder="舊密碼" required>
+            <input type="password" id="new-password-input" placeholder="新密碼" required>
+            <p id="change-password-message" class="modal-message"></p>
+            <button class="confirm-button" id="save-new-password-button">確認修改</button>
+            <button class="cancel-button" id="close-change-password-modal">取消</button>
+        </div>
+    </div>
+
+
+    <!-- 將所有 JavaScript 程式碼都放在這個模組中 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        // 匯入所需的 Firebase 認證和 Firestore 函式
+        import {
+            getAuth,
+            signInWithEmailAndPassword,
+            createUserWithEmailAndPassword,
+            onAuthStateChanged,
+            signOut,
+            sendEmailVerification,
+            sendPasswordResetEmail,
+            updatePassword,
+            reauthenticateWithCredential,
+            EmailAuthProvider
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, onSnapshot, collection, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // =========================================================================
+        // 你提供的 Firebase 設定
+        // =========================================================================
+        // IMPORTANT: 這裡需要填入你的 firebaseConfig。請參考 'firebase-setup-guide' 文件。
+        const firebaseConfig = {
+          apiKey: "AIzaSyDX_gb9nhYWHXZ2wYbFXKBoIt2LIHqmegc",
+          authDomain: "project-4752601545840018132.firebaseapp.com",
+          projectId: "project-4752601545840018132",
+          storageBucket: "project-4752601545840018132.firebasestorage.app",
+          messagingSenderId: "1041541669850",
+          appId: "1:1041541669850:web:9eb9c7ee583a7debd7d6e3"
+        };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : firebaseConfig.appId;
+        // =========================================================================
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let userId;
+        let userNickname = ''; // 儲存使用者暱稱
+        let chatUnsubscribe = null; // 新增變數來儲存 Firestore 監聽器的取消函式
+
+        const mainApp = document.getElementById('main-app');
+        const authContainer = document.getElementById('auth-container');
+        const loginScreen = document.getElementById('login-screen');
+        const registerScreen = document.getElementById('register-screen');
+        
+        // 登入相關 DOM 元素
+        const loginMessage = document.getElementById('login-message');
+        const emailInput = document.getElementById('email-input');
+        const passwordInput = document.getElementById('password-input');
+        const loginButton = document.getElementById('login-button');
+        const toggleLoginPasswordButton = document.getElementById('toggle-login-password');
+        const forgotPasswordLink = document.getElementById('forgot-password-link');
+        
+        // 註冊相關 DOM 元素
+        const registerMessage = document.getElementById('register-message');
+        const registerEmailInput = document.getElementById('register-email-input');
+        const registerPasswordInput = document.getElementById('register-password-input');
+        const nicknameInput = document.getElementById('nickname-input');
+        const registerButtonAction = document.getElementById('register-button-action');
+        const toggleRegisterPasswordButton = document.getElementById('toggle-register-password');
+
+        // 切換畫面按鈕
+        const gotoRegisterButton = document.getElementById('goto-register-button');
+        const gotoLoginButton = document.getElementById('goto-login-button');
+
+        // 主程式區塊的按鈕
+        const logoutButton = document.getElementById('logout-button');
+        const changePasswordButton = document.getElementById('change-password-button');
+        const sendButton = document.getElementById('send-button');
+        const messageInput = document.getElementById('message-input');
+        const messageContainer = document.getElementById('message-container');
+        const weatherInfo = document.getElementById('weather-info');
+        const chatTitle = document.getElementById('chat-title');
+        const userStatus = document.getElementById('user-status');
+        
+        // 密碼重設彈出視窗的 DOM 元素
+        const forgotPasswordModal = document.getElementById('forgot-password-modal');
+        const forgotPasswordEmailInput = document.getElementById('forgot-password-email-input');
+        const forgotPasswordMessage = document.getElementById('forgot-password-message');
+        const sendResetEmailButton = document.getElementById('send-reset-email-button');
+        const closeForgotPasswordModal = document.getElementById('close-forgot-password-modal');
+
+        // 修改密碼彈出視窗的 DOM 元素
+        const changePasswordModal = document.getElementById('change-password-modal');
+        const currentPasswordInput = document.getElementById('current-password-input');
+        const newPasswordInput = document.getElementById('new-password-input');
+        const changePasswordMessage = document.getElementById('change-password-message');
+        const saveNewPasswordButton = document.getElementById('save-new-password-button');
+        const closeChangePasswordModal = document.getElementById('close-change-password-modal');
+
+        // 當網頁載入完成時，執行這個函式
+        window.addEventListener('DOMContentLoaded', () => {
+            // 設定事件監聽
+            loginButton.addEventListener('click', handleLogin);
+            registerButtonAction.addEventListener('click', handleRegister);
+            logoutButton.addEventListener('click', handleLogout);
+            sendButton.addEventListener('click', sendMessage);
+            messageInput.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // 顯示/隱藏密碼功能的事件監聽
+            toggleLoginPasswordButton.addEventListener('click', () => {
+                const icon = toggleLoginPasswordButton.querySelector('i');
+                togglePasswordVisibility(passwordInput, icon);
+            });
+            toggleRegisterPasswordButton.addEventListener('click', () => {
+                const icon = toggleRegisterPasswordButton.querySelector('i');
+                togglePasswordVisibility(registerPasswordInput, icon);
+            });
+
+            // 切換畫面
+            gotoRegisterButton.addEventListener('click', () => {
+                loginScreen.style.display = 'none';
+                registerScreen.style.display = 'block';
+                loginMessage.innerHTML = '';
+                registerMessage.textContent = '';
+            });
+            gotoLoginButton.addEventListener('click', () => {
+                loginScreen.style.display = 'block';
+                registerScreen.style.display = 'none';
+                registerMessage.textContent = '';
+            });
+            
+            // 忘記密碼和修改密碼的事件監聽
+            forgotPasswordLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                forgotPasswordModal.style.display = 'flex';
+                forgotPasswordEmailInput.value = emailInput.value;
+                forgotPasswordMessage.textContent = '';
+            });
+
+            closeForgotPasswordModal.addEventListener('click', () => {
+                forgotPasswordModal.style.display = 'none';
+            });
+            
+            sendResetEmailButton.addEventListener('click', handleForgotPassword);
+
+            changePasswordButton.addEventListener('click', () => {
+                changePasswordModal.style.display = 'flex';
+                currentPasswordInput.value = '';
+                newPasswordInput.value = '';
+                changePasswordMessage.textContent = '';
+            });
+
+            closeChangePasswordModal.addEventListener('click', () => {
+                changePasswordModal.style.display = 'none';
+            });
+            
+            saveNewPasswordButton.addEventListener('click', handleChangePassword);
+        });
+
+        // 函式：切換密碼可見性
+        function togglePasswordVisibility(inputElement, iconElement) {
+            if (inputElement.type === 'password') {
+                inputElement.type = 'text';
+                iconElement.classList.remove('fa-eye');
+                iconElement.classList.add('fa-eye-slash');
+            } else {
+                inputElement.type = 'password';
+                iconElement.classList.remove('fa-eye-slash');
+                iconElement.classList.add('fa-eye');
+            }
+        }
+
+        // 函式：處理登出
+        async function handleLogout() {
+            try {
+                await signOut(auth);
+                loginMessage.innerHTML = '';
+            } catch (error) {
+                console.error("登出失敗:", error);
+            }
+        }
+
+        // 函式：處理登入
+        async function handleLogin() {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            if (!email || !password) {
+                showLoginMessage("電子郵件與密碼不能為空。", 'red');
+                return;
+            }
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                if (error.code === 'auth/invalid-credential') {
+                    const existingUser = auth.currentUser;
+                    if (existingUser && !existingUser.emailVerified) {
+                         showLoginMessage(
+                            "您的電子郵件尚未驗證。請檢查您的信箱，並點擊驗證連結。", 
+                            'orange', 
+                            true
+                        );
+                    } else {
+                        showLoginMessage(getErrorMessage(error.code), 'red');
+                    }
+                } else {
+                    showLoginMessage(getErrorMessage(error.code), 'red');
+                }
+                console.error("登入失敗:", error.code);
+            }
+        }
+
+        // 函式：處理註冊 (新增了暱稱功能)
+        async function handleRegister() {
+            const email = registerEmailInput.value;
+            const password = registerPasswordInput.value;
+            const nickname = nicknameInput.value;
+
+            if (!email || !password || !nickname) {
+                registerMessage.style.color = 'red';
+                registerMessage.textContent = "所有欄位都不能為空。";
+                return;
+            }
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                const userDocRef = doc(db, `artifacts/${appId}/public/data/users`, user.uid);
+                await setDoc(userDocRef, { nickname: nickname });
+
+                await sendEmailVerification(user);
+                
+                registerMessage.style.color = 'green';
+                registerMessage.textContent = "註冊成功！";
+                
+                loginScreen.style.display = 'block';
+                registerScreen.style.display = 'none';
+                
+                showLoginMessage("註冊成功！請先驗證您的電子郵件後再登入。", 'orange');
+                console.log("驗證信已發送至:", user.email);
+
+            } catch (error) {
+                registerMessage.style.color = 'red';
+                registerMessage.textContent = getErrorMessage(error.code);
+                console.error("註冊失敗:", error.code);
+            }
+        }
+
+        // 函式：處理忘記密碼
+        async function handleForgotPassword() {
+            const email = forgotPasswordEmailInput.value;
+            if (!email) {
+                forgotPasswordMessage.style.color = 'red';
+                forgotPasswordMessage.textContent = "請輸入電子郵件。";
+                return;
+            }
+            try {
+                await sendPasswordResetEmail(auth, email);
+                forgotPasswordMessage.style.color = 'green';
+                forgotPasswordMessage.textContent = "已發送密碼重設連結到您的信箱。";
+            } catch (error) {
+                forgotPasswordMessage.style.color = 'red';
+                forgotPasswordMessage.textContent = getErrorMessage(error.code);
+                console.error("發送密碼重設郵件失敗:", error);
+            }
+        }
+
+        // 函式：處理修改密碼
+        async function handleChangePassword() {
+            const user = auth.currentUser;
+            const currentPassword = currentPasswordInput.value;
+            const newPassword = newPasswordInput.value;
+
+            if (!currentPassword || !newPassword) {
+                changePasswordMessage.style.color = 'red';
+                changePasswordMessage.textContent = "所有欄位都不能為空。";
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                changePasswordMessage.style.color = 'red';
+                changePasswordMessage.textContent = "新密碼至少需要 6 個字元。";
+                return;
+            }
+
+            try {
+                const credential = EmailAuthProvider.credential(user.email, currentPassword);
+                await reauthenticateWithCredential(user, credential);
+                
+                await updatePassword(user, newPassword);
+
+                changePasswordMessage.style.color = 'green';
+                changePasswordMessage.textContent = "密碼修改成功！";
+                setTimeout(() => changePasswordModal.style.display = 'none', 2000);
+
+            } catch (error) {
+                changePasswordMessage.style.color = 'red';
+                changePasswordMessage.textContent = getErrorMessage(error.code);
+                console.error("修改密碼失敗:", error);
+            }
+        }
+
+        // 函式：將 Firebase 的錯誤代碼轉換成易懂的訊息
+        function getErrorMessage(errorCode) {
+            switch (errorCode) {
+                case 'auth/invalid-email':
+                    return '電子郵件格式不正確。';
+                case 'auth/user-disabled':
+                    return '此帳號已被停用。';
+                case 'auth/user-not-found':
+                    return '找不到此電子郵件的帳號。';
+                case 'auth/wrong-password':
+                    return '密碼錯誤。';
+                case 'auth/email-already-in-use':
+                    return '此電子郵件已被註冊。';
+                case 'auth/weak-password':
+                    return '新密碼強度不足，至少需要 6 個字元。';
+                case 'auth/invalid-credential':
+                    return '登入資訊無效，請檢查電子郵件和密碼是否正確。';
+                case 'auth/requires-recent-login':
+                    return '您需要重新登入才能修改密碼。請先登出再登入，然後再試一次。';
+                default:
+                    return '登入/註冊發生未知錯誤。';
+            }
+        }
+
+        /**
+         * 新增函式：統一顯示登入訊息
+         * @param {string} message - 要顯示的文字
+         * @param {string} color - 訊息文字的顏色
+         * @param {boolean} showResendButton - 是否顯示重新發送驗證信的按鈕
+         */
+        function showLoginMessage(message, color, showResendButton = false) {
+            loginMessage.innerHTML = '';
+            const messageP = document.createElement('p');
+            messageP.textContent = message;
+            messageP.style.color = color;
+            loginMessage.appendChild(messageP);
+
+            if (showResendButton) {
+                const resendButton = document.createElement('button');
+                resendButton.id = 'resend-verification-button';
+                resendButton.textContent = '重新發送驗證信';
+                resendButton.addEventListener('click', handleResendVerification);
+                loginMessage.appendChild(resendButton);
+            }
+        }
+        
+        /**
+         * 新增函式：處理重新發送驗證信
+         */
+        async function handleResendVerification() {
+            const user = auth.currentUser;
+            if (user) {
+                try {
+                    await sendEmailVerification(user);
+                    showLoginMessage("已重新發送驗證信！請檢查您的信箱。", 'green');
+                } catch (error) {
+                    showLoginMessage("重新發送驗證信失敗，請稍後再試。", 'red');
+                    console.error("重新發送驗證信失敗:", error);
+                }
+            } else {
+                 showLoginMessage("您需要先登入才能重新發送驗證信。", 'red');
+            }
+        }
+
+        // 監聽使用者登入狀態的變化
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                await user.reload(); 
+                if (user.emailVerified) {
+                    userId = user.uid;
+                    const userDocRef = doc(db, `artifacts/${appId}/public/data/users`, userId);
+                    const docSnap = await getDoc(userDocRef);
+                    if (docSnap.exists()) {
+                        userNickname = docSnap.data().nickname;
+                    } else {
+                        userNickname = user.email || '使用者';
+                    }
+
+                    chatTitle.textContent = `聊天室 (帳號: ${userNickname})`;
+                    userStatus.textContent = '狀態: 已登入';
+                    userStatus.style.color = 'green';
+                    authContainer.style.display = 'none';
+                    mainApp.style.display = 'flex';
+                    // 啟用聊天室輸入
+                    messageInput.disabled = false;
+                    sendButton.disabled = false;
+                    fetchWeather();
+                    if (!chatUnsubscribe) {
+                        chatUnsubscribe = setupChatListener();
+                    }
+                } else {
+                    await signOut(auth);
+                    showLoginMessage(
+                        "偵測到您的帳號尚未驗證。請檢查您的信箱，點擊驗證連結後再登入。",
+                        'orange',
+                        true
+                    );
+                }
+            } else {
+                userId = null;
+                userNickname = '';
+                authContainer.style.display = 'flex';
+                mainApp.style.display = 'none';
+                loginScreen.style.display = 'block';
+                registerScreen.style.display = 'none';
+                chatTitle.textContent = `聊天室`;
+                userStatus.textContent = '狀態: 未登入';
+                userStatus.style.color = '#888';
+                messageInput.disabled = true;
+                sendButton.disabled = true;
+                if (chatUnsubscribe) {
+                    chatUnsubscribe();
+                    chatUnsubscribe = null;
+                }
+            }
+        });
+
+        // 函式：處理聊天訊息的發送與顯示
+        async function sendMessage() {
+            const message = messageInput.value.trim(); 
+
+            if (message !== '' && userId) { 
+                try {
+                    const chatCollectionRef = collection(db, `artifacts/${appId}/public/data/messages`);
+                    await addDoc(chatCollectionRef, {
+                        userId: userId,
+                        nickname: userNickname, 
+                        text: message,
+                        timestamp: Date.now()
+                    });
+                    
+                    messageInput.value = ''; 
+                } catch (error) {
+                    console.error("寫入聊天訊息時發生錯誤:", error);
+                }
+            }
+        }
+
+        // 函式：設定 Firestore 即時監聽器
+        function setupChatListener() {
+            const chatCollectionRef = collection(db, `artifacts/${appId}/public/data/messages`);
+            const chatQuery = query(chatCollectionRef);
+            
+            const unsubscribe = onSnapshot(chatQuery, (snapshot) => {
+                messageContainer.innerHTML = ''; 
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    displayMessage(data.userId, data.nickname, data.text); 
+                });
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+            });
+
+            return unsubscribe; // 回傳這個取消函式
+        }
+        
+        // 函式：將訊息顯示在網頁上 (使用暱稱)
+        function displayMessage(senderId, senderNickname, messageText) {
+            const messageRow = document.createElement('div');
+            messageRow.classList.add('message-row');
+            
+            const messageTextElement = document.createElement('span');
+            messageTextElement.classList.add('message-text');
+            messageTextElement.textContent = messageText;
+
+            const messageNicknameElement = document.createElement('div');
+            messageNicknameElement.classList.add('message-nickname');
+            messageNicknameElement.textContent = `來自 ${senderNickname || '使用者'}`; 
+            
+            if (senderId === userId) {
+                messageRow.classList.add('my-message');
+            } else {
+                messageRow.classList.add('other-message');
+            }
+            
+            messageRow.appendChild(messageNicknameElement);
+            messageRow.appendChild(messageTextElement);
+            messageContainer.appendChild(messageRow);
+        }
+
+        // 函式：從中央氣象署 API 取得天氣資料
+        async function fetchWeather() {
+            try {
+                // API 網址，用於取得臺南市未來 36 小時天氣預報 (F-C0032-001)
+                const apiKey = 'CWA-1F9FD71C-D858-4545-855C-61AE0FF69473'; 
+                const locationName = '臺南市'; 
+                const url = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=${apiKey}&locationName=${locationName}`;
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP 錯誤! 狀態碼: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success !== 'true') {
+                    weatherInfo.innerHTML = `<p>獲取天氣資料失敗：${data.message}</p>`;
+                    return;
+                }
+
+                const locationData = data.records.location[0];
+                const weatherElements = locationData.weatherElement;
+
+                const weatherDescription = weatherElements.find(e => e.elementName === 'Wx').time[0].parameter.parameterName;
+                const temperature = weatherElements.find(e => e.elementName === 'MaxT').time[0].parameter.parameterName; 
+                const rainProbability = weatherElements.find(e => e.elementName === 'PoP').time[0].parameter.parameterName; 
+                const startTime = weatherElements[0].time[0].startTime;
+
+                weatherInfo.innerHTML = `
+                    <h3>${locationName}</h3>
+                    <p><strong>天氣狀況：</strong> ${weatherDescription}</p>
+                    <p><strong>最高氣溫：</strong> ${temperature}°C</p>
+                    <p><strong>降雨機率：</strong> ${rainProbability}%</p>
+                    <p><small>資料時間：${new Date(startTime).toLocaleString('zh-TW')}</small></p>
+                `;
+
+            } catch (error) {
+                weatherInfo.innerHTML = `<p>無法連接到天氣伺服器，請檢查網路或 API key。</p>`;
+                console.error('獲取天氣資料時發生錯誤：', error);
+            }
+        }
+    </script>
+</body>
+</html>
